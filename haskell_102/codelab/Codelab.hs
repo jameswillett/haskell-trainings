@@ -103,8 +103,8 @@ data Color = Red     -- this is a constructor, of type Color
 
 allColors :: [Color]
 allColors = [minColor .. maxColor] -- enumFromTo minColor maxColor
-  where minColor = codelab
-        maxColor = codelab
+  where maxColor = maxBound
+        minColor = minBound
 
 
 
@@ -133,7 +133,7 @@ type ColorMap = Map Color Int
 -- https://hackage.haskell.org/package/base/docs/Data-Maybe.html
 
 getIntOr0 :: Maybe Int -> Int
-getIntOr0 = codelab
+getIntOr0 = fromMaybe 0
 
 
 -- [2.2]
@@ -144,7 +144,7 @@ getIntOr0 = codelab
 --     lookup :: key -> Map key value -> Maybe value
 
 getCount :: Color -> ColorMap -> Int
-getCount color cmap = codelab
+getCount color cmap = getIntOr0 $ lookup color cmap
 
 
 -- [2.3]
@@ -158,7 +158,7 @@ getCount color cmap = codelab
 -- For a fancier version, you can look up "insertWith".
 
 addColorToMap :: Color -> ColorMap -> ColorMap
-addColorToMap color cmap = codelab
+addColorToMap color cmap = insertWith (+) color 1 cmap
 
 
 
@@ -200,7 +200,7 @@ data ErrorOr a = Error ErrorMsg -- an error with a message
 -- "wrapValue" takes a value, and puts it in the context of an "ErrorOr a".
 
 wrapValue :: a -> ErrorOr a
-wrapValue = codelab
+wrapValue a = Value a
 
 
 -- [3.2]
@@ -210,8 +210,8 @@ wrapValue = codelab
 -- pattern match to decide what to do.
 
 fmapValue :: (a -> b) -> ErrorOr a -> ErrorOr b
-fmapValue _ (Error msg) = codelab
-fmapValue f (Value   x) = codelab
+fmapValue _ (Error msg) = Error msg
+fmapValue f (Value   x) = Value (f x)
 
 
 -- [3.3]
@@ -222,8 +222,9 @@ fmapValue f (Value   x) = codelab
 -- a contextual value...
 
 apValue :: ErrorOr (a -> b) -> ErrorOr a -> ErrorOr b
-apValue (Error msg) _   = codelab
-apValue (Value   f) eoa = codelab
+apValue (Error msg) _   = Error msg
+apValue _ (Error msg) = Error msg
+apValue (Value f) (Value x) = Value (f x)
 
 
 -- [3.4]
@@ -231,8 +232,8 @@ apValue (Value   f) eoa = codelab
 -- "fmapValue", except we don't have to wrap the result.
 
 bindValue :: (a -> ErrorOr b) -> ErrorOr a -> ErrorOr b
-bindValue _ (Error msg) = codelab
-bindValue f (Value   x) = codelab
+bindValue _ (Error msg) = Error msg
+bindValue f (Value   x) = f x
 
 
 
@@ -281,8 +282,8 @@ data Score = Score
 allCodes :: Int -> [Code]
 allCodes s
   | s <  0    = error "allCodes: size was lower than 0"
-  | s == 0    = codelab
-  | otherwise = [color:code | color <- codelab, code <- codelab]
+  | s == 0    = [[]]
+  | otherwise = [color:code | color <- allColors, code <- allCodes (s - 1)]
 
 
 -- [4.2]
@@ -295,7 +296,7 @@ allCodes s
 --     empty         ::                                    ColorMap
 
 codeToMap :: Code -> ColorMap
-codeToMap code = codelab
+codeToMap code = foldr addColorToMap empty code
 
 
 -- [4.3]
@@ -319,7 +320,7 @@ codeToMap code = codelab
 -- For bonus points, reimplement it with "filter" or with a list comprehension.
 
 countBlacks :: Code -> Code -> Int
-countBlacks c1 c2 = codelab $ codelab codelab $ codelab codelab c1 c2
+countBlacks c1 c2 = sum $ map fromEnum $ zipWith (==) c1 c2
 
 
 -- [4.4]
@@ -333,22 +334,21 @@ countBlacks c1 c2 = codelab $ codelab codelab $ codelab codelab c1 c2
 --     sum       :: [Int] -> Int
 
 countTotal :: Code -> Code -> Int
-countTotal c1 c2 = codelab $ codelab compareColor codelab
+countTotal c1 c2 = sum $ map compareColor allColors
   where compareColor :: Color -> Int
-        compareColor color = min (codelab) (codelab)
+        compareColor color = min (getCount color cmap1) (getCount color cmap2)
         cmap1, cmap2 :: ColorMap
-        cmap1 = codelab c1
-        cmap2 = codelab c2
-
+        cmap1 = codeToMap c1
+        cmap2 = codeToMap c2
 
 -- [4.5]
 -- Finally, "countScore" takes two codes and computes the score. :)
 
 countScore :: Code -> Code -> Score
-countScore c1 c2 = codelab
-  where black = codelab
-        total = codelab
-        white = codelab
+countScore c1 c2 = Score { scoreBlack = black, scoreWhite = white }
+  where black = countBlacks c1 c2
+        total = countTotal c1 c2
+        white = total - black
 
 
 
