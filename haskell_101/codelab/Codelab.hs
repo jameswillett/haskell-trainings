@@ -256,14 +256,18 @@ and (x:xs)
 -- What do you think it returns for an empty list?
 
 or :: [Bool] -> Bool
-or l = codelab
+or [] = False
+or (x:xs)
+  | x == True   = x
+  | otherwise   = or xs
 
 
 -- "(++)" is the concatenation operator.  To concatenate two linked lists
 -- you have to chain the second one at the end of the first one.
 
 (++) :: [a] -> [a] -> [a]
-l1 ++ l2 = codelab
+[] ++ l2 = l2
+(l:l1) ++ l2 = l : (l1 ++ l2)
 
 
 
@@ -294,8 +298,8 @@ l1 ++ l2 = codelab
 -- You probably remember this one?  Nothing extraordinary here.
 
 map :: (a -> b) -> [a] -> [b]
-map _ []     = codelab
-map f (a:as) = codelab
+map _ []     = []
+map f (a:as) = f a : map f as
 
 
 -- Same thing here for filter, except that we use it to introduce a new
@@ -311,26 +315,26 @@ map f (a:as) = codelab
 --     | otherwise =  x
 
 filter :: (a -> Bool) -> [a] -> [a]
-filter _ [] = codelab
+filter _ [] = []
 filter f (x:xs)
-  | codelab   = codelab
-  | otherwise = codelab
+  | f x == False  = filter f xs
+  | otherwise     = x : filter f xs
 
 
 -- foldl
 -- foldl (-) 0 [1,2,3,4]   ==   (((0 - 1) - 2) - 3) - 4   ==   -10
 
 foldl :: (a -> x -> a) -> a -> [x] -> a
-foldl _ a []     = codelab
-foldl f a (x:xs) = codelab
+foldl _ a []     = a
+foldl f a (x:xs) = foldl f (f a x) xs
 
 
 -- foldr
 -- foldr (-) 0 [1,2,3,4]   ==   1 - (2 - (3 - (4 - 0)))   ==    -2
 
 foldr :: (x -> a -> a) -> a -> [x] -> a
-foldr _ a []     = codelab
-foldr f a (x:xs) = codelab
+foldr _ a []     = a
+foldr f a (x:xs) = f x $ foldr f a xs
 
 
 
@@ -390,21 +394,23 @@ foldr f a (x:xs) = codelab
 -- If we were to fix the "head" function, how could we do that?
 
 safeHead :: [a] -> Maybe a
-safeHead []    = codelab
-safeHead (x:_) = codelab
+safeHead []    = Nothing
+safeHead (x:_) = Just x
 
 
 -- "isNothing" should not need an explanation by now!
 
 isNothing :: Maybe a -> Bool
-isNothing = codelab
+isNothing Nothing = True
+isNothing _       = False
 
 
 -- The "fromMaybe" function is your way out of a Maybe value.
 -- It takes a default value to use in case our Maybe value is Nothing.
 
 fromMaybe :: a -> Maybe a -> a
-fromMaybe _ _ = codelab
+fromMaybe d Nothing   = d
+fromMaybe _ (Just x)  = x
 -- Consider starting with these patterns:
 --
 -- fromMaybe def fixme = codelab
@@ -416,7 +422,9 @@ fromMaybe _ _ = codelab
 -- ...doesn't it kinda look like fold?
 
 maybe :: b -> (a -> b) -> Maybe a -> b
-maybe _ _ _ = codelab
+maybe d f m = case m of
+  Nothing -> d
+  Just x  -> f x
 -- Consider starting with these patterns:
 -- maybe b _ fixme = codelab
 -- maybe _ f fixme = codelab
